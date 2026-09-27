@@ -6,7 +6,7 @@
 ## 설치
 
 ```
-/plugin marketplace add <이 저장소의 git URL>
+/plugin marketplace add https://github.com/dkGithup2022/dk-discovery-bundle.git
 /plugin install dk-discovery-bundle@dk-discovery-bundle
 ```
 
