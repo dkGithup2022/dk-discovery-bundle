@@ -65,7 +65,8 @@ READ THE PROTOCOL FIRST — 와이어프레임 초안 생성과 점검은 스스
    이미지 속 페이지 이름, 섹션 구성, 문구를 우리 서비스로 가져오지 않는다.
 8. Read the generator guide: `${CLAUDE_PLUGIN_ROOT}/project_discovery/tools/wireframe-gen/README.md` —
    HTML은 직접 짜지 않고 이 생성기로 만든다. 에이전트는 그림 데이터(`dsl.py` 등)만 쓰고 `gen.py`·`mdgen.py`를 실행한다.
-   본보기 데이터는 `tools/wireframe-gen/example/`에 있다
+   본보기는 `tools/wireframe-gen/example-web/`(웹, run 문서와 스크린샷 포함)과 `example/`(앱)에 있다.
+   프레임 폭은 sitemap.md의 플랫폼으로 정해진다 (기본 웹: 1280px 화면을 절반 640px로)
 9. Execute: 재료 읽기·전제 확인 → 그릴 목록과 첫 묶음 정하기 → 공통 섹션 그리기 → 첫 묶음 페이지의 기본 모양 → 공통 섹션과 첫 묶음 확인(유저 확인 1) → 나머지 페이지의 기본 모양 → 상태 화면 → 와이어플로 → 사이트맵·유저 흐름과 대조(추가 후보 모으기) → 완성 조건 점검(미달 시 해당 단계로) → 전체 확인과 추가 후보 반영(유저 확인 2)
 10. Generate wireframe/wireframe.html + wireframe/wireframe.md + wireframe/handoff.json (추가 후보를 sitemap.md 갱신으로 반영했으면 sitemap/sitemap.md도)
 
@@ -73,4 +74,4 @@ IMPORTANT: Stream all output live — never run in background.
 색은 쓰지 않는다. 박스 하나가 사이트맵 섹션 하나이고, 박스 라벨은 사이트맵의 섹션 번호와 이름(P4-3 행동 버튼)을 그대로 쓴다.
 사이트맵에 없는 섹션·요소나 유저 흐름에 없는 화면 상태는 추가 후보로 적고, 유저 확인 전에는 sitemap.md와 user-flow.md를 고치지 않는다.
 완성 조건(워크플로 "완성 조건")을 채우지 못한 항목은 강제로 채우지 않고 wireframe.md 상단과 wireframe.html 머리(`<header>`)에 "최소 기준 미달: {항목} — {사유}"로 남긴다.
-Next step after completion: `/dk-discovery-bundle:design-references` (디자인 레퍼런스). 현재 run에 design_handoff/references/selection.md가 이미 있으면 `/dk-discovery-bundle:design-request-guide`.
+Next step after completion: `/dk-discovery-bundle:discovery-consistency-check` (기획 문서 전체의 정합성 검사).

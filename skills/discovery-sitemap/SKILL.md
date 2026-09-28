@@ -1,7 +1,7 @@
 ---
 name: discovery-sitemap
 description: 확정된 기능 목록(ui-spec)을 받아 페이지 트리·페이지별 섹션 목록·페이지 간 이동 표로 이루어진 사이트맵을 만든다. 1층 내비게이션 확정과 전체 확인, 두 번의 유저 확인을 거친다. 유저 흐름과 와이어프레임 단계의 직접 입력.
-argument-hint: "[Input: <기능 목록 문서 경로>] [Platform: app | web | both]"
+argument-hint: "[Input: <기능 목록 문서 경로>] [Platform: web | app | both]"
 ---
 
 > 이 스킬이 읽는 문서는 `${CLAUDE_PLUGIN_ROOT}/project_discovery/` 아래에 있다. 그 문서들 안에 나오는 상대 경로(`references/`, `git/`, `loop/`, `tone-guide.md` 등)도 이 폴더 기준으로 찾는다.
@@ -24,7 +24,7 @@ READ THE PROTOCOL FIRST — 초안 생성과 점검은 스스로 반복하고, 1
 ## Argument Parsing
 
 - `Input:` — 기능 목록 문서 경로 (기본: 현재 run의 ui-spec/ui-spec.md)
-- `Platform:` — app / web / both (기본: seed-v2에서 읽고, 없으면 유저에게 묻는다)
+- `Platform:` — web / app / both (기본: web. seed-v2에 플랫폼이 적혀 있으면 그 값). 웹이면 1층은 상단 메뉴이고 페이지 목록에 URL 경로를 적는다
 
 ## Execution
 
@@ -39,4 +39,4 @@ READ THE PROTOCOL FIRST — 초안 생성과 점검은 스스로 반복하고, 1
 
 IMPORTANT: Stream all output live — never run in background.
 페이지를 가로지르는 이동은 트리 그림에 그리지 않고 이동 표에만 적는다. 기능 번호는 ui-spec의 번호를 그대로 쓴다.
-Next step after completion: `/dk-discovery-bundle:discovery-user-flow` (유저 흐름 — 아직 없는 단계).
+Next step after completion: `/dk-discovery-bundle:discovery-user-flow` (유저 흐름).

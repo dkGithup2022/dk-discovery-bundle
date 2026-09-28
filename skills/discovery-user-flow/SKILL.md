@@ -58,4 +58,4 @@ READ THE PROTOCOL FIRST — 흐름 초안 생성과 점검은 스스로 반복�
 IMPORTANT: Stream all output live — never run in background.
 흐름의 화면 노드는 사이트맵 페이지 번호를 그대로 쓴다. 사이트맵에 없는 화면은 "(추가 후보) 이름"으로 적고, 유저 확인 전에는 sitemap.md를 고치지 않는다.
 완성 조건(워크플로 "완성 조건")을 채우지 못한 항목은 강제로 채우지 않고 user-flow.md 상단에 "최소 기준 미달: {항목} — {사유}"로 남긴다.
-Next step after completion: `/dk-discovery-bundle:discovery-wireframe` (와이어프레임 — 아직 없는 단계).
+Next step after completion: `/dk-discovery-bundle:discovery-wireframe` (와이어프레임).
