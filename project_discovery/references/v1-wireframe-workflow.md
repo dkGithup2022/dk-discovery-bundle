@@ -28,6 +28,11 @@ You MUST read these before starting:
     sitemap.md에서 프레임과 섹션 박스를 옮겨 올 때 번호와 이름을 이 규칙대로 읽기 위해 본다
   user-flow-guide.md — "구성 요소"(도형 규칙), "화면 상태" 표의 여섯 가지 상태 이름, "번호 규칙"(F1).
     user-flow.md의 흐름 그림을 와이어플로로 옮길 때 도형마다 무엇으로 바꾸는지 알기 위해 본다
+  tools/wireframe-gen/README.md — HTML 생성기. wireframe.html과 wireframe.md는 이 생성기로 만든다.
+    HTML과 SVG 좌표 코드를 직접 짜지 않는다. 에이전트가 쓰는 것은 {RUN}/wireframe/.gen/ 아래의
+    그림 데이터(dsl.py, candidates.json, decisions.json, pageextra.json)뿐이고, 2·3·5·6·7단계의 "그린다"는
+    이 데이터를 채우고 gen.py를 다시 실행한다는 뜻이다. 본보기 데이터는 tools/wireframe-gen/example/에 있다.
+    생성기로 그릴 수 없는 모양이 필요하면 생성기를 고치지 말고 동작 주석(note)으로 적고, 결정 기록에 남긴다
   tone-guide.md — 산출물 언어 규칙 (요소 이름, 버튼 이름, 동작 주석, 질문 문구 포함)
   git/git-verification.md — 커밋 규칙 (prefix discovery, 커밋 전 staged 파일 검증)
 
