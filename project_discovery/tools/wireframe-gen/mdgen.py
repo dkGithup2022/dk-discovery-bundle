@@ -1,4 +1,5 @@
 import json, os, re, sys
+sys.dont_write_bytecode = True   # 플러그인 폴더와 DATA 폴더에 __pycache__를 만들지 않는다
 sys.path.insert(0, os.path.dirname(__file__))  # gen.py를 찾기 위함
 os.environ.setdefault("SCOPE", "all")
 import gen, dsl
@@ -9,6 +10,9 @@ info = json.load(open(f"{D}/info.json"))
 cand = json.load(open(f"{D}/candidates.json"))
 dec = json.load(open(f"{D}/decisions.json"))
 extra = json.load(open(f"{D}/pageextra.json"))  # page -> dict(below=..., comp=...)
+# run마다 다른 문장: first_batch = 첫 묶음 설명 한 줄, notice = 머리 아래 인용 안내 줄들 (없으면 빈 목록)
+meta = json.load(open(f"{D}/meta.json")) if os.path.exists(f"{D}/meta.json") else {}
+notice = meta.get("notice", [])
 
 L = []
 L.append(f"# 와이어프레임 기록 — {gen.title_line}\n")
@@ -16,10 +20,10 @@ L.append(f"기준 문서: sitemap/sitemap.md · user-flow/user-flow.md · 플랫
 L.append(f"진행 상태: {STATUS}")
 for w in WARN: L.append(w)
 L.append("그림 파일: wireframe/wireframe.html\n")
-L.append("> 테스트 실행 산출물이다. 두 번의 유저 확인은 기존 문서의 유저 결정 인용과 대리 판단으로 통과시켰다.")
-L.append("> 대리 판단한 항목은 결정 기록에 \"테스트 실행 — 대리 확인\"으로 표시했다 (전체 목록: test-notes/wireframe-proxy.md).\n")
+for i, n in enumerate(notice):
+    L.append(f"> {n}" + ("\n" if i == len(notice) - 1 else ""))
 L.append("## 그린 범위")
-L.append("첫 묶음: P1, P2, P5 — F1 매거진을 읽다가 모임 팔로우하기. 핵심 기능 2~7을 다루는 흐름 중 번호가 가장 앞서서. 성공 경로 두 갈래(P2에서 바로 팔로우 / P5로 가서 팔로우)에서 P1, P2, P5\n")
+L.append(f'첫 묶음: {meta.get("first_batch", "—")}\n')
 L.append("### 페이지 프레임")
 L.append("| 페이지 | 유형 | 섹션 수 | 박스 수 | 첫 화면 경계 아래의 핵심 행동 버튼 | 경쟁사 참조 | 그림 |")
 L.append("|--------|------|--------|--------|------------------------------|-----------|------|")

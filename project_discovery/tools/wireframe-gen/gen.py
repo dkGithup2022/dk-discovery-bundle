@@ -1,4 +1,5 @@
 import re, json, os, sys, math, html
+sys.dont_write_bytecode = True   # 플러그인 폴더와 DATA 폴더에 __pycache__를 만들지 않는다
 # RUN  = run 디렉토리 (sitemap/, user-flow/ 가 있는 곳) — 필수
 # DATA = 이 run의 그림 데이터 폴더 (dsl.py, candidates.json …) — 기본: {RUN}/wireframe/.gen
 RUN = os.environ["RUN"]
@@ -15,15 +16,28 @@ E = html.escape
 # ---------------- 사이트맵 읽기 ----------------
 sm = open(f"{RUN}/sitemap/sitemap.md").read()
 title_line = sm.splitlines()[0].replace("# 사이트맵 — ", "")
-platform = re.search(r"플랫폼: (\S+)", sm).group(1)
+_pm = re.search(r"플랫폼: ([^·|\n]+)", sm)
+platform = _pm.group(1).strip() if _pm else "웹"
+# 플랫폼 분기: web(기본) / app / both
+PLAT = "app" if platform.startswith("앱") else ("both" if ("둘" in platform or ("웹" in platform and "앱" in platform)) else "web")
 
 pages = {}   # num -> dict(name, type, heading, sections=[...])
 order = []
 for m in re.finditer(r"^\| ([PMX]\d+) \| (.+?) \| (.+?) \|", sm, re.M):
     num, name, typ = m.group(1), m.group(2), m.group(3)
     if num in pages: continue
-    pages[num] = dict(name=name, type=typ, sections=[], heading=None)
+    pages[num] = dict(name=name, type=typ, sections=[], heading=None, url="")
     order.append(num)
+# 페이지 목록 표에 "URL" 칸이 있으면 읽는다 (웹일 때 필수)
+_pl = re.search(r"## 페이지 목록\n\n(\|.*\n)\|.*\n((?:\|.*\n)+)", sm)
+if _pl:
+    _hd = [x.strip() for x in _pl.group(1).strip().strip("|").split("|")]
+    _ui = next((i for i, h in enumerate(_hd) if "URL" in h), None)
+    if _ui is not None:
+        for row in _pl.group(2).splitlines():
+            c = [x.strip() for x in row.strip().strip("|").split("|")]
+            if c and c[0] in pages and len(c) > _ui and c[_ui] not in ("", "—", "-"):
+                pages[c[0]]["url"] = c[_ui].strip("`")
 
 common = {}
 cm = re.search(r"## 공통 섹션\n\n\|.*\n\|.*\n((?:\|.*\n)+)", sm)
@@ -84,6 +98,8 @@ for block in re.split(r"^### ", fl_part, flags=re.M)[1:]:
     flows.append(dict(num=fnum, name=head[len(fnum)+1:], info=info, mer=mer, block=block))
 
 # ---------------- 요소 자리 그리기 ----------------
+MODE = "app" if PLAT == "app" else "web"   # 지금 그리는 프레임: web = 여러 열을 나란히, app = 한 열로 접는다
+USED = set()                                 # 쓰인 새 요소 — 쓰인 것의 CSS만 싣는다
 XSVG = '<svg class="x" preserveAspectRatio="none" viewBox="0 0 100 100"><line x1="0" y1="0" x2="100" y2="100"/><line x1="100" y1="0" x2="0" y2="100"/></svg>'
 def el_html(e):
     k = e[0]
@@ -123,6 +139,33 @@ def el_html(e):
     if k == "err": return f'<div class="el"><span class="errmark">!</span><span class="line"></span><span class="nm">{E(e[1])}</span></div>'
     if k == "load": return "".join('<span class="loadbar"></span>' for _ in range(e[1]))
     if k == "note": return f'<div class="note">··· {E(e[1])}</div>'
+    # ---- 웹에서 주로 쓰는 요소 ----
+    USED.add(k)
+    if k == "cols":   # ("cols", [[요소…], [요소…]], [비율…] 또는 None) — 앱 폭에서는 한 열로 접는다
+        ratio = e[2] if len(e) > 2 and e[2] else [1] * len(e[1])
+        cells = "".join(f'<div class="colx" style="flex:{ratio[i]} 1 0">{"".join(el_html(x) for x in col)}</div>' for i, col in enumerate(e[1]))
+        return f'<div class="el cols{" stack" if MODE == "app" else ""}">{cells}</div>'
+    if k == "gnb":    # ("gnb", "로고 이름", [메뉴 항목…], "CTA 버튼" 또는 None, 선택 번호 또는 None)
+        cta, sel = (e[3] if len(e) > 3 else None), (e[4] if len(e) > 4 else None)
+        items = "".join(f'<span class="gi{" sel" if i == sel else ""}">{E(t)}</span>' for i, t in enumerate(e[2]))
+        btn = f'<span class="btn">{E(cta)}</span>' if cta else ""
+        return f'<div class="el gnb"><span class="logo"><span class="icon sqi"></span>{E(e[1])}</span><span class="gmenu">{items}</span>{btn}</div>'
+    if k == "hero":   # ("hero", "큰 제목", "설명", [버튼…], 핵심 번호 또는 None, "이미지 이름" 또는 None)
+        prim = e[4] if len(e) > 4 else None
+        img = e[5] if len(e) > 5 else None
+        btns = "".join(f'<span class="btn{" primary" if i == prim else ""}">{E(b)}</span>' for i, b in enumerate(e[3]))
+        text = (f'<div class="herot"><span class="bar hb"></span><span class="bar hb short"></span><span class="nm">{E(e[1])}</span>'
+                f'<span class="line"></span><span class="line short"></span><span class="nm">{E(e[2])}</span><div class="el">{btns}</div></div>')
+        pic = f'<div class="img" style="height:150px">{XSVG}<span class="nm">{E(img)}</span></div>' if img else ""
+        if pic: return el_html(("cols", [[("raw", text)], [("raw", pic)]], [3, 2])).replace('<div class="el cols', '<div class="el cols heroc', 1)
+        return f'<div class="el hero">{text}</div>'
+    if k == "raw": return e[1]
+    if k == "steps":  # ("steps", [단계 이름…], 현재 번호)
+        return '<div class="el steps">' + "".join(
+            f'<span class="st{" cur" if i == e[2] else ""}"><span class="sn">{i + 1}</span>{E(t) if MODE == "web" or i == e[2] else ""}</span>' for i, t in enumerate(e[1])) + '</div>'  # 좁은 화면에서는 지금 단계만 이름을 적는다
+    if k == "footer": # ("footer", [묶음 이름…]) — 묶음마다 이름과 짧은 글 줄
+        return '<div class="el cols foot' + (" stack" if MODE == "app" else "") + '">' + "".join(
+            f'<div class="colx" style="flex:1 1 0"><span class="bar s"></span><span class="nm">{E(t)}</span><span class="line"></span><span class="line short"></span></div>' for t in e[1]) + '</div>'
     raise ValueError(e)
 
 def label(page, sec, suffix=""):
@@ -134,9 +177,16 @@ def sec_body(page, sec):
     spec = dsl.PAGES[page][sec["n"]]
     if isinstance(spec, tuple) and spec[0] == "common":
         _, cname, notes, primary = spec
-        body = "".join(el_html(e) for e in dsl.COMMON[cname] if e[0] != "note")
+        # 공통 섹션에 단 주석(note)도 페이지 프레임에 그대로 옮기고, 페이지 주석을 그 뒤에 붙인다
+        body = "".join(el_html(e) for e in dsl.COMMON[cname])
         if primary:
-            body = body.replace('<span class="btn">완료</span>', '<span class="btn primary">완료</span>')
+            # True = 공통 섹션의 첫 버튼을 채운다. 글자 = 그 이름의 버튼을 채운다 (공통 섹션에 없는 이름이면 첫 버튼의 이름을 바꿔 채운다)
+            btns = re.findall(r'<span class="btn">([^<]*)</span>', body)
+            if primary is True and btns:
+                body = body.replace(f'<span class="btn">{btns[0]}</span>', f'<span class="btn primary">{btns[0]}</span>', 1)
+            elif isinstance(primary, str) and btns:
+                old = E(primary) if E(primary) in btns else btns[0]
+                body = body.replace(f'<span class="btn">{old}</span>', f'<span class="btn primary">{E(primary)}</span>', 1)
         body += "".join(el_html(("note", n)) for n in notes)
         return body
     return "".join(el_html(e) for e in spec)
@@ -147,20 +197,55 @@ def modal_note(page):
         return f'<div class="note callers">··· 부르는 곳: {E(mvr["inbound"])}</div>'
     return ""
 
-def frame_html(page):
+def frame_cls(page):
+    """프레임 클래스: 웹이면 1280px 화면을 절반(640px)으로, 모달·드로어는 그보다 좁게."""
+    if MODE == "app": return "frame"
+    t = pages[page]["type"]
+    return "frame web" + (" modal" if "모달" in t or page.startswith("M") and "드로어" not in t else "") + (" drawer" if "드로어" in t else "")
+
+def url_note(page):
+    u = pages[page].get("url")
+    return f'<div class="url">주소: {E(u)}</div>' if u and MODE == "web" else ""
+
+def has_cols(page):
+    def walk(els):
+        for e in els:
+            if e[0] in ("cols", "footer") or (e[0] == "hero" and len(e) > 5 and e[5]): return True
+            if e[0] == "card" and walk(e[1]): return True
+        return False
+    for s in pages[page]["sections"]:
+        spec = dsl.PAGES[page][s["n"]]
+        if isinstance(spec, tuple): spec = dsl.COMMON[spec[1]]
+        if walk(spec): return True
+    return False
+
+def frame_html(page, suffix="", extra=""):
     p = pages[page]
-    out = [f'<section class="frame" id="{page}"><h3>{E(p["heading"])}</h3>{modal_note(page)}<div class="screen">']
+    out = [f'<section class="{frame_cls(page)}" id="{page}{suffix}"><h3>{E(p["heading"])}{extra}</h3>{url_note(page)}{modal_note(page)}<div class="screen">']
     for s in p["sections"]:
-        out.append(f'<div class="sec" id="{page}-{s["n"]}">{label(page, s)}{sec_body(page, s)}</div>')
+        out.append(f'<div class="sec" id="{page}-{s["n"]}{suffix}">{label(page, s)}{sec_body(page, s)}</div>')
     out.append('<div class="fold"><span>첫 화면 경계</span></div></div></section>')
     return "".join(out)
+
+def page_frames(page):
+    """기본 모양 프레임. 둘 다이면 웹 프레임 옆에 모바일 프레임(여러 열을 한 열로 접은 모양)을 둔다."""
+    global MODE
+    if PLAT != "both": return frame_html(page)
+    MODE = "web"
+    if not has_cols(page):
+        return frame_html(page).replace('<div class="screen">', '<div class="note callers">··· 모바일도 같은 배치 (여러 열 요소가 없다)</div><div class="screen">', 1)
+    web = frame_html(page)
+    MODE = "app"
+    mob = frame_html(page, "-모바일", " <small>모바일</small>")
+    MODE = "web"
+    return web + mob
 
 def state_html(st):
     page = st["page"]; p = pages[page]
     changed = dsl.STATES[(page, st["state"])]
     sid = f'{page}-{st["state"].replace(" ", "-")}'
     extra = ' <small>와이어프레임 단계에서 추가</small>' if st["extra"] else ""
-    out = [f'<section class="frame state" id="{sid}"><h3>{page} {E(p["name"])} · {E(st["state"])}{extra}</h3>',
+    out = [f'<section class="{frame_cls(page)} state" id="{sid}"><h3>{page} {E(p["name"])} · {E(st["state"])}{extra}</h3>',
            f'<div class="note callers">··· 언제: {E(st["when"])}</div><div class="screen">']
     for s in p["sections"]:
         if s["n"] in changed:
@@ -176,8 +261,9 @@ def common_html():
     for name, c in common.items():
         cid = "공통-" + name.replace(" ", "-")
         body = "".join(el_html(e) for e in dsl.COMMON[name])
-        f = ' <small>기능 s6</small>' if name == "상세 상단 바" else ""
-        out.append(f'<section class="frame common-frame"><h3>{E(name)} [공통]</h3><div class="screen short"><div class="sec" id="{cid}"><span class="label">{E(name)} [공통]{f}</span>{body}</div></div>'
+        feat = re.findall(r"\(기능 ([^)]+)\)", c["content"]) or ([getattr(dsl, "COMMON_FEAT", {})[name]] if name in getattr(dsl, "COMMON_FEAT", {}) else [])
+        f = f' <small>기능 {E(feat[0])}</small>' if feat else ""
+        out.append(f'<section class="frame{"" if MODE == "app" else " web"} common-frame"><h3>{E(name)} [공통]</h3><div class="screen short"><div class="sec" id="{cid}"><span class="label">{E(name)} [공통]{f}</span>{body}</div></div>'
                    f'<div class="note">··· 쓰이는 페이지: {E(c["pages"])}</div></section>')
     return "".join(out)
 
@@ -227,7 +313,35 @@ def parse_mer(mer):
             n["shown"] = re.sub(r"\s[PMX]\d+-\d+(?=(\s*\(선택\))?$)", "", n["text"])
     return nodes, edges, lanes
 
-MINI_W = 170
+MINI_W = 170 if PLAT == "app" else 250    # 줄인 프레임 폭: 앱은 세로 화면, 웹은 가로로 넓은 화면 비율
+MINI_PER = 2 if PLAT == "app" else 3      # 줄인 프레임 한 줄에 놓는 버튼 수
+MINI_MAX = 4 if PLAT == "app" else 6
+
+def mini_names(spec):
+    """줄인 프레임에 옮길 누르는 요소(버튼·칩·탭·카드·입력칸)의 이름."""
+    names = []
+    for e in spec:
+        if e[0] in ("btn", "btnp"): names.append(("b", e[1], e[0] == "btnp"))
+        elif e[0] == "btns": names += [("b", b, i == e[2]) for i, b in enumerate(e[1])]
+        elif e[0] == "chips": names += [("c", c, False) for c in e[1]]
+        elif e[0] == "tabs": names += [("c", t, i == e[2]) for i, t in enumerate(e[1])]
+        elif e[0] == "card": names.append(("c", e[3], False))
+        elif e[0] == "list": names.append(("c", e[2], False))
+        elif e[0] == "in": names.append(("i", e[1], False))
+        elif e[0] == "h":
+            for x in e[1]:
+                if x[0] in ("btn", "btnp"): names.append(("b", x[1], x[0] == "btnp"))
+                elif x[0] == "ic": names.append(("c", f"({x[1]})", False))
+        elif e[0] == "cols":
+            for col in e[1]: names += mini_names(col)
+        elif e[0] == "gnb":
+            names += [("c", t, i == (e[4] if len(e) > 4 else None)) for i, t in enumerate(e[2])]
+            if len(e) > 3 and e[3]: names.append(("b", e[3], False))
+        elif e[0] == "hero":
+            names += [("b", b, i == (e[4] if len(e) > 4 else None)) for i, b in enumerate(e[3])]
+        elif e[0] == "steps":
+            names.append(("c", f'{e[2] + 1}/{len(e[1])} {e[1][e[2]]}', True))
+    return names
 def mini_frame(fl, n, confirm):
     """줄인 프레임: 섹션 박스와 라벨만, 화살표가 출발하는 섹션만 요소 자리."""
     page = n["page"]; p = pages[page]
@@ -254,23 +368,10 @@ def mini_frame(fl, n, confirm):
         if key in origins:
             spec = changed.get(s["n"]) or dsl.PAGES[page][s["n"]]
             if isinstance(spec, tuple): spec = [e for e in dsl.COMMON[spec[1]] if e[0] != "note"]
-            names = []
-            for e in spec:
-                if e[0] in ("btn", "btnp"): names.append(("b", e[1], e[0] == "btnp"))
-                elif e[0] == "btns": names += [("b", b, i == e[2]) for i, b in enumerate(e[1])]
-                elif e[0] == "chips": names += [("c", c, False) for c in e[1]]
-                elif e[0] == "tabs": names += [("c", t, i == e[2]) for i, t in enumerate(e[1])]
-                elif e[0] == "card": names.append(("c", e[3], False))
-                elif e[0] == "list": names.append(("c", e[2], False))
-                elif e[0] == "in": names.append(("i", e[1], False))
-                elif e[0] == "h":
-                    for x in e[1]:
-                        if x[0] == "btn": names.append(("b", x[1], False))
-                        elif x[0] == "ic": names.append(("c", f"({x[1]})", False))
-            names = names[:4]
+            names = mini_names(spec)[:MINI_MAX]
             inner = '<div class="mel">' + "".join(
                 f'<span class="{"mbtn" if k=="b" else "mchip"}{" primary" if pr else ""}">{E(t)}</span>' for k, t, pr in names) + '</div>'
-            h += 18 * max(1, math.ceil(len(names) / 2))
+            h += 18 * max(1, math.ceil(len(names) / MINI_PER))
         secy[key] = y + h / 2
         rows.append(f'<div class="{cls}" style="height:{h}px"><span class="mlabel">{page}-{s["n"]} {E(s["name"])}</span>{inner}</div>')
         y += h + 2
@@ -295,9 +396,10 @@ def build_flow(fl):
         m = re.match(r"(F\d+)", e["label"])
         if m and nodes[e["a"]]["kind"] == "screen":
             nodes[e["a"]]["via"] = f'{m.group(1)} 와이어플로에서 그린다'
+    # 흐름 선 라벨로 알 수 없는 "다른 와이어플로에서 그린다" 주석은 그림 데이터에서 받는다: VIA = {("F4", "M1"): "…"}
     for n in nodes.values():
-        if n["kind"] == "screen" and n["page"] == "M1" and fl["num"] == "F4":
-            n["via"] = "F3 와이어플로에서 그린다 (M1 안의 단계)"
+        if n["kind"] == "screen" and (fl["num"], n["page"]) in getattr(dsl, "VIA", {}):
+            n["via"] = dsl.VIA[(fl["num"], n["page"])]
     # 시스템 결과 → 상태 화면
     for n in nodes.values():
         if n["kind"] == "result":
@@ -618,11 +720,34 @@ table{border-collapse:collapse;margin-top:8px}
 td,th{border:1px solid #999;padding:4px 6px;font-size:11px;text-align:left;vertical-align:top}
 """
 
+# 웹 프레임 — 1280px 화면을 절반(640px)으로. 첫 화면 경계는 1280×800 화면 기준(절반이면 400px)
+WEB_CSS = """
+.frame.web{width:640px;flex:0 0 640px}
+.frame.web.modal{width:320px;flex:0 0 320px}
+.frame.web.drawer{width:220px;flex:0 0 220px}
+.frame.web .screen{min-height:440px}
+.frame.web .fold{top:400px}
+.frame.web.common-frame .screen.short{min-height:0}
+.url{border:1px solid #999;border-bottom:0;padding:2px 6px;font-size:10px;color:#555;background:#fff}
+"""
+# 새 요소 — 쓰인 것만 싣는다 (앱 예시의 결과가 바뀌지 않게)
+EL_CSS = {
+ "cols": ".el.cols{align-items:flex-start;gap:10px;flex-wrap:nowrap}.el.cols.stack{flex-direction:column;align-items:stretch}.colx{min-width:0;display:flex;flex-direction:column;gap:2px}.el.cols.stack .colx{width:100%}",
+ "gnb": ".el.gnb{flex-wrap:nowrap;justify-content:space-between}.logo{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:#555;white-space:nowrap}.icon.sqi{border-radius:0;width:18px;height:14px}.gmenu{display:flex;flex-wrap:wrap;gap:4px 12px;flex:1;justify-content:flex-end;margin-right:10px}.gi{font-size:11px;padding:0 2px;border-bottom:2px solid transparent}.gi.sel{border-bottom-color:#444;font-weight:700}",
+ "hero": ".el.hero{flex-direction:column;align-items:stretch}.el.heroc{align-items:center}.herot{display:flex;flex-direction:column;gap:4px;padding:10px 0}.bar.hb{height:18px;width:80%}.bar.hb.short{width:55%}.herot .el{margin-top:6px}",
+ "steps": ".el.steps{flex-wrap:nowrap;gap:0}.st{flex:1;display:flex;align-items:center;gap:4px;font-size:10px;color:#555;border-top:2px solid #ccc;padding-top:4px;min-width:0}.st.cur{border-top-color:#444;color:#000;font-weight:700}.sn{display:inline-block;width:16px;height:16px;border:1px solid #000;border-radius:50%;text-align:center;line-height:14px;font-size:9px;flex:0 0 16px;background:#fff}.st.cur .sn{background:#444;color:#fff;border-color:#444}",
+ "footer": ".el.foot{border-top:1px solid #999;padding-top:6px}",
+}
+
 def build():
     showpages = FIRST if SCOPE == "first" else order
     parts = []
     status_line = STATUS
     draft = '<div class="draft">유저 확인 전 초안</div>' if STATUS == "유저 확인 전 초안" else ""
+    ext_word = "외부 앱" if PLAT == "app" else "외부 서비스"
+    web_read = ("" if PLAT == "app" else
+                " 웹 프레임은 1280px 화면을 절반 크기(640px)로 줄여 그렸고, 첫 화면 경계는 1280×800 화면 기준이다. 프레임 위 \"주소\" = 사이트맵의 URL 경로."
+                + (" 모바일 프레임은 여러 열을 한 열로 접은 모양이다." if PLAT == "both" else ""))
     warn = "".join(f'<p class="warn">{E(w)}</p>' for w in WARN.split("||") if w)
     flows_out, metas = [], []
     if SCOPE != "first":
@@ -633,11 +758,11 @@ def build():
     parts.append(f'<header>{draft}<h1>와이어프레임 — {E(title_line)}</h1>'
                  f'<p>기준 문서: sitemap/sitemap.md · user-flow/user-flow.md · 플랫폼: {E(platform)} · 진행 상태: {E(status_line)}</p>{warn}'
                  f'<p>읽는 법: 박스 = 사이트맵 섹션, 박스 왼쪽 위 = 섹션 번호와 이름(작은 글자는 기능 번호), 점선 박스 = 상태에 따라 바뀐 섹션, 가로 점선 = 첫 화면 경계, ··· = 동작 주석. '
-                 f'진한 회색 버튼 = 그 화면의 핵심 행동 버튼. 와이어플로의 원 = 시작·목표, 마름모 = 분기, 밑줄 글자 = 유저 입력(화살표 위 문구), 가는 테두리 박스 = 단계·시스템 결과, 두 줄 테두리 = 외부 앱, 점선 회색 박스 = 메모.</p>{nav}</header>')
+                 f'진한 회색 버튼 = 그 화면의 핵심 행동 버튼. 와이어플로의 원 = 시작·목표, 마름모 = 분기, 밑줄 글자 = 유저 입력(화살표 위 문구), 가는 테두리 박스 = 단계·시스템 결과, 두 줄 테두리 = {ext_word}, 점선 회색 박스 = 메모.{web_read}</p>{nav}</header>')
     parts.append(f'<section id="common"><h2>공통 섹션</h2>{common_html()}</section>')
     rows = []
     for p in showpages:
-        row = [frame_html(p)]
+        row = [page_frames(p)]
         if SCOPE != "first":
             for s in states:
                 if s["page"] == p: row.append(state_html(s))
@@ -652,8 +777,9 @@ def build():
     else:
         ctab = "<p>없음</p>"
     parts.append(f'<section id="candidates"><h2>사이트맵 대조 결과</h2>{ctab}</section>')
+    css = CSS + ("" if PLAT == "app" else WEB_CSS) + "".join(EL_CSS[k] + "\n" for k in EL_CSS if k in USED or (k == "cols" and USED & {"hero", "footer"}))
     doc = (f'<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n'
-           f'<title>와이어프레임 — {E(title_line)}</title>\n<style>{CSS}</style>\n</head>\n<body>\n' + "\n".join(parts) + '\n</body>\n</html>\n')
+           f'<title>와이어프레임 — {E(title_line)}</title>\n<style>{css}</style>\n</head>\n<body>\n' + "\n".join(parts) + '\n</body>\n</html>\n')
     os.makedirs(f"{RUN}/wireframe", exist_ok=True)
     open(f"{RUN}/wireframe/wireframe.html", "w").write(doc)
     info = dict(pages={p: dict(heading=pages[p]["heading"], nsec=len(pages[p]["sections"]),
