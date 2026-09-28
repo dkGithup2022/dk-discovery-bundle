@@ -1,0 +1,139 @@
+{
+ "pages": {
+  "P1": {
+   "heading": "P1 홈 (페이지)",
+   "nsec": 8,
+   "nbox": 8
+  },
+  "P2": {
+   "heading": "P2 작업 사례 (페이지)",
+   "nsec": 6,
+   "nbox": 6
+  },
+  "P3": {
+   "heading": "P3 작업 상세 (상세, 템플릿 — 작업마다)",
+   "nsec": 7,
+   "nbox": 7
+  },
+  "P4": {
+   "heading": "P4 의뢰 등록 (페이지)",
+   "nsec": 7,
+   "nbox": 7
+  },
+  "X1": {
+   "heading": "X1 의뢰 접수 완료 (트리 밖)",
+   "nsec": 4,
+   "nbox": 4
+  },
+  "M1": {
+   "heading": "M1 간단 상담 (모달)",
+   "nsec": 3,
+   "nbox": 3
+  }
+ },
+ "states": [
+  {
+   "page": "P4",
+   "pname": "의뢰 등록",
+   "state": "오류",
+   "when": "필수 항목(프로젝트 이름, 연락처)을 비우고 다음이나 의뢰 등록을 누를 때",
+   "src": "F1 (A13)",
+   "extra": false,
+   "changed": [
+    "P4-4",
+    "P4-5"
+   ]
+  },
+  {
+   "page": "M1",
+   "pname": "간단 상담",
+   "state": "오류",
+   "when": "이름·연락 방법·질문 중 하나를 비우고 보내기를 누를 때",
+   "src": "F2 (A6)",
+   "extra": false,
+   "changed": [
+    "M1-2",
+    "M1-3"
+   ]
+  }
+ ],
+ "flows": [
+  {
+   "num": "F1",
+   "name": "작업 사례를 보고 의뢰 등록하기",
+   "nodes": 18,
+   "moved": 18,
+   "labels": 4,
+   "moved_labels": 4,
+   "confirm": [],
+   "input_other_origin": [
+    {
+     "flow": "F1",
+     "input": "A8",
+     "text": "다른 작업을 누른다",
+     "src": "맡겨도 되겠다고 판단했는가?",
+     "sec": "P3-6",
+     "reason": "입력의 섹션(P3-6)이 앞 노드(맡겨도 되겠다고 판단했는가?)의 페이지에 없다"
+    },
+    {
+     "flow": "F1",
+     "input": "A9",
+     "text": "프로젝트 등록하기를 누른다",
+     "src": "맡겨도 되겠다고 판단했는가?",
+     "sec": "P3-5",
+     "reason": "입력의 섹션(P3-5)이 앞 노드(맡겨도 되겠다고 판단했는가?)의 페이지에 없다"
+    },
+    {
+     "flow": "F1",
+     "input": "A14",
+     "text": "의뢰 등록을 누른다",
+     "src": "필수 항목을 채웠는가?",
+     "sec": "P4-5",
+     "reason": "입력의 섹션(P4-5)이 앞 노드(필수 항목을 채웠는가?)의 페이지에 없다"
+    }
+   ],
+   "screens": [
+    "P1",
+    "P2",
+    "P3",
+    "P4",
+    "X1"
+   ],
+   "states_used": [
+    "오류"
+   ],
+   "state_nodes": [
+    "A13→P4 · 오류"
+   ]
+  },
+  {
+   "num": "F2",
+   "name": "간단 상담 남기기",
+   "nodes": 11,
+   "moved": 11,
+   "labels": 2,
+   "moved_labels": 2,
+   "confirm": [],
+   "input_other_origin": [
+    {
+     "flow": "F2",
+     "input": "A7",
+     "text": "보내기를 누른다",
+     "src": "필수 항목을 채웠는가?",
+     "sec": "M1-3",
+     "reason": "입력의 섹션(M1-3)이 앞 노드(필수 항목을 채웠는가?)의 페이지에 없다"
+    }
+   ],
+   "screens": [
+    "M1",
+    "P1"
+   ],
+   "states_used": [
+    "오류"
+   ],
+   "state_nodes": [
+    "A6→M1 · 오류"
+   ]
+  }
+ ]
+}
