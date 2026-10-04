@@ -13,8 +13,8 @@ READ THE PROTOCOL FIRST — 대조와 점검은 스스로 반복하고, 문제�
 
 1. 입력 확인 — 없으면 해당 단계를 먼저 실행하라고 안내 후 중단:
    - value-proposal/seed-v2.md, ui-spec/ui-spec.md, sitemap/sitemap.md, user-flow/user-flow.md, wireframe/wireframe.md + wireframe.html
-2. 회차 확인: consistency/handoff.json에서 다음 회차를 읽는다. 4회차 이상이면 실행하지 않는다.
-   2·3회차는 앞 회차 fix-log.md가 있어야 한다.
+2. 회차 확인: consistency/handoff.json의 tool이 fix면 round + 1, 없으면 1 (check면 워크플로 0단계대로 fix를 먼저 안내).
+   4회차 이상이면 실행하지 않는다. 2·3회차는 앞 회차 fix-log.md가 있어야 한다.
 3. 대화형 환경인지 확인한다. 불가능한 환경이면 문제 목록까지 만들고 "처리" 칸을 비운 채 "유저 확인 전"으로 표시하고 멈춘다.
    유저 처리를 지어내지 않는다.
 
@@ -26,10 +26,10 @@ READ THE PROTOCOL FIRST — 대조와 점검은 스스로 반복하고, 문제�
 
 1. Read the workflow: `${CLAUDE_PLUGIN_ROOT}/project_discovery/references/v1-consistency-check-workflow.md`
 2. Read the check items: `${CLAUDE_PLUGIN_ROOT}/project_discovery/references/consistency-check-items.md`
-3. Read the format guides: `${CLAUDE_PLUGIN_ROOT}/project_discovery/references/sitemap-guide.md`, `user-flow-guide.md`, `wireframe-guide.md` — 번호 규칙과 표기 규칙
+3. Read the format guides: `${CLAUDE_PLUGIN_ROOT}/project_discovery/references/sitemap-guide.md`, `user-flow-guide.md`, `wireframe-guide.md` — 전부 읽지 않고 워크플로 "참조 레퍼런스"에 적힌 절만
 4. Read the tone guide: `${CLAUDE_PLUGIN_ROOT}/project_discovery/references/tone-guide.md`
 5. Read the git verification: `${CLAUDE_PLUGIN_ROOT}/project_discovery/git/git-verification.md`
-6. Execute: 회차 정하기 → 결정 기록 모으기 → 항목별 대조(A~H, 2·3회차는 수정 결과와 수정이 만든 문제만) → 문제 기록 → 완성 조건 점검 → 처리 결정(유저 확인)
+6. Execute: 회차 정하기 → 결정 기록 모으기 → 항목별 대조(A~I, 항목마다 스크립트/브라우저/눈. 2·3회차는 수정 검증·수정이 만든 문제·넘김 줄만) → 문제 기록(위치는 섹션 번호까지, 제안이 둘이면 권장 표시) → 완성 조건 점검 → 처리 결정(유저 확인)
 7. Generate consistency/round-{N}/findings.md + consistency/handoff.json
 
 IMPORTANT: Stream all output live — never run in background.
