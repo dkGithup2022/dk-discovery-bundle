@@ -32,4 +32,5 @@ EXECUTE IMMEDIATELY — 판단은 검사 단계에서 끝났다. 유저가 "고�
 IMPORTANT: Stream all output live — never run in background.
 기존 번호는 바꾸지 않는다 — 중간 삽입은 소문자 덧붙임(P11-3a), 삭제는 취소선. "의도한 것"·"보류" 문제는 건드리지 않는다.
 와이어프레임은 wireframe/.gen/ 그림 데이터를 고치고 생성기로 다시 만든다. 결정 기록의 옛 줄은 지우지 않고 덧붙인다.
+3회차(마지막)에는 넘김을 남기지 않고, 기계 점검을 모두 돌리고, consistency/summary.md와 루프 뒤 유저 확인 목록을 만든다.
 Next step after completion: 3회차 전이면 `/dk-discovery-bundle:discovery-consistency-check` (다음 회차), 3회차면 `/dk-discovery-bundle:design-request-guide`.

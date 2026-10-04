@@ -148,8 +148,26 @@ discovery-consistency-fix 실행을 안내하고 중단한다.
 findings.md와 consistency/handoff.json을 쓰고 커밋한다.
 다음 단계:
   "고친다"가 1건 이상 → discovery-consistency-fix
-  "고친다"가 0건 → 종료. 남은 "보류"와 "의도한 것"을 요약해 보여주고 design-request-guide로 넘어간다
-  N = 3이고 "고친다"가 남음 → fix는 돌리되, 그 뒤 검사는 하지 않는다 (fix 뒤 종료)
+  "고친다"가 0건 → 루프 종료. 아래 "루프 마무리"를 하고 design-request-guide로 넘어간다
+  N = 3이고 "고친다"가 남음 → fix는 돌리되 그 뒤 검사는 하지 않는다. handoff.json에 "final_round": true를 적는다.
+    fix가 마지막 회차 규칙(수정 워크플로 6단계)대로 마치고 "루프 마무리"를 한다
+```
+
+### 루프 마무리 (루프를 끝내는 스킬이 한다)
+
+```
+루프는 두 곳에서 끝난다: 검사에서 "고친다"가 0건일 때(이 스킬), 3회차 수정이 끝났을 때(discovery-consistency-fix).
+끝내는 쪽이 consistency/summary.md를 쓴다:
+  - 회차별 표: 찾은 문제 수(모순·누락·미결), 고친다·의도·보류, 고친 수, 넘김
+  - 유저가 직접 결정한 것: 회차별로 유저 답변 원문과 받아들인 제안
+  - 루프 뒤 유저 확인 목록 — 루프 안에서 유저가 보지 않은 것 중 화면이나 기능을 정한 것:
+      남은 보류, 과정 기록 묶음(G1)의 대리 확인 중 화면 동작을 정한 것, fix-log "고쳤지만 확인할 점",
+      3회차 수정에서 루프 뒤 확인으로 올린 것
+    항목마다: 무엇을, 지금 문서에 적힌 값, 출처
+  - 뒤 단계로 넘기는 것: "조건 미정"처럼 디자인·FE 단계에서 정하기로 한 값 (design-request-guide가 읽는다)
+대화형 환경이면 루프 뒤 유저 확인 목록을 보여주고 확인받는다. 유저가 바꾸는 것이 있으면
+그 문서를 고치고(수정 워크플로의 결정 기록·번호 규칙을 따른다) summary.md에 결과를 적는다.
+대화형이 아니면 목록만 쓰고 "유저 확인 전"으로 둔다.
 ```
 
 ## 완성 조건
@@ -177,6 +195,7 @@ discovery/{run-id}/
   consistency/
     round-{N}/findings.md
     handoff.json
+    summary.md          ← 루프를 이 스킬이 끝낼 때만
 ```
 
 ### findings.md 구조
@@ -213,19 +232,24 @@ discovery/{run-id}/
 
 ```json
 {
-  "version": "1.0",
+  "version": "1.1",
   "tool": "dk-discovery-bundle:discovery-consistency-check",
   "generated_at": "ISO timestamp",
   "round": 1,
   "max_rounds": 3,
+  "final_round": false,
   "findings": 12,
   "by_kind": { "모순": 5, "누락": 4, "미결": 3 },
   "to_fix": 9,
   "intended": 2,
   "deferred": 1,
+  "loop_closed": false,
   "next_step": "dk-discovery-bundle:discovery-consistency-fix"
 }
 ```
+
+루프를 끝냈으면 "loop_closed": true, "summary": "consistency/summary.md", "after_loop_checks": {루프 뒤 유저 확인 목록 건수}를 적고,
+next_step은 "dk-discovery-bundle:design-request-guide"로 둔다.
 
 ## Commit
 

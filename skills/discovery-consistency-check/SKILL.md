@@ -34,4 +34,5 @@ READ THE PROTOCOL FIRST — 대조와 점검은 스스로 반복하고, 문제�
 
 IMPORTANT: Stream all output live — never run in background.
 판단 기준은 문서의 결정 기록뿐이다 — 이전 세션의 대화는 없다. 대리 확인·초안 결정은 유저 결정으로 쓰지 않는다.
+"고친다"가 0건이면 이 스킬이 루프를 끝낸다 — consistency/summary.md와 루프 뒤 유저 확인 목록을 만든다 (워크플로 "루프 마무리").
 Next step after completion: 고칠 문제가 있으면 `/dk-discovery-bundle:discovery-consistency-fix`, 없으면 `/dk-discovery-bundle:design-request-guide`.
