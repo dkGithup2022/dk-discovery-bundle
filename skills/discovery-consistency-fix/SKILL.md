@@ -26,9 +26,10 @@ EXECUTE IMMEDIATELY — 판단은 검사 단계에서 끝났다. 유저가 "고�
 3. Read the format guides: `${CLAUDE_PLUGIN_ROOT}/project_discovery/references/sitemap-guide.md`, `user-flow-guide.md`, `wireframe-guide.md`
 4. Read the tone guide: `${CLAUDE_PLUGIN_ROOT}/project_discovery/references/tone-guide.md`
 5. Read the git verification: `${CLAUDE_PLUGIN_ROOT}/project_discovery/git/git-verification.md`
-6. Execute: 준비 → 수정 순서 정하기(seed-v2 → ui-spec → sitemap → user-flow → wireframe) → 문서별 수정 → 참조 따라가기 → 기록 → 완성 조건 점검
+6. Execute: 준비(와이어프레임 생성기 확인, 이어서 하기) → 수정 순서 정하기(seed-v2 → ui-spec → sitemap → user-flow → wireframe) → 문서별 수정 → 참조 따라가기 → 기록(고친 것 / 넘김 / 고쳤지만 확인할 점) → 완성 조건 점검
 7. Generate consistency/round-{N}/fix-log.md + 고친 문서들 + consistency/handoff.json 갱신
 
 IMPORTANT: Stream all output live — never run in background.
 기존 번호는 바꾸지 않는다 — 중간 삽입은 소문자 덧붙임(P11-3a), 삭제는 취소선. "의도한 것"·"보류" 문제는 건드리지 않는다.
+와이어프레임은 wireframe/.gen/ 그림 데이터를 고치고 생성기로 다시 만든다. 결정 기록의 옛 줄은 지우지 않고 덧붙인다.
 Next step after completion: 3회차 전이면 `/dk-discovery-bundle:discovery-consistency-check` (다음 회차), 3회차면 `/dk-discovery-bundle:design-request-guide`.
