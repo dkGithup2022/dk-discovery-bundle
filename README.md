@@ -1,7 +1,84 @@
 # dk-discovery-bundle
 
-서비스 아이디어 한 줄에서 시작해 경쟁 조사, 가설, 가치 기획, UI 기획을 거쳐, 클로드 디자인에 넘길 레퍼런스와 진행 가이드까지 만드는 Claude Code 플러그인이다.
-기획 단계 7개와 디자인 인계 단계 2개, 모두 9개의 스킬이 들어 있다.
+서비스 아이디어 한 줄에서 시작해 경쟁 조사, 가설, 가치 기획을 거쳐 사이트맵·유저 흐름·와이어프레임까지 만들고, 클로드 디자인에 넘길 레퍼런스와 진행 가이드까지 만드는 Claude Code 플러그인이다.
+기획 단계 12개(정합성 검사·수정 포함)와 디자인 인계 단계 2개, 모두 14개의 스킬이 들어 있다.
+
+## 전체 흐름
+
+`◆`는 유저 확인 지점이다. 단계마다 산출물이 `discovery/{run-id}/` 아래에 쌓이고 커밋 하나를 남긴다.
+
+```
+ ┌──────────────────────────── 기획: 무엇을 만들까 ────────────────────────────┐
+ │                                                                              │
+ │  ① init ──▶ ② research ──▶ ③ service-recording ──▶ ④ brainstorm             │
+ │   seed.md     ◆ 대상 확인     screenshots/ + shots.md    brainstorm.md         │
+ │                analysis/*.md                                │                │
+ │                                                             ▼                │
+ │              ⑥ value-proposal ◀────────────────────── ⑤ hypothesize          │
+ │                seed-v2.md (고객군·핵심 가치)              hypotheses.md        │
+ │                    │                                                         │
+ └────────────────────┼─────────────────────────────────────────────────────────┘
+                      ▼
+ ┌──────────────────────────── 화면 구조: 어떻게 보일까 ───────────────────────┐
+ │                                                                              │
+ │  ⑦ ui-spec  ── 대화 1·2만 ──  ◆ 용어·기능 확정   ◆ 전역 분위기               │
+ │     ui-spec.md (기능 번호 · 전역 분위기)                                     │
+ │        │                                         │                           │
+ │        │                                         └───────────────┐           │
+ │        ▼                                                         │           │
+ │  ⑧ sitemap   ◆ 1층 메뉴 확정   ◆ 전체 확인                       │           │
+ │     sitemap.md (페이지 트리 · 섹션 목록 · 이동 표)               │           │
+ │        │    ▲                    ▲                               │           │
+ │        │    │ 추가 후보 (화면)   │ 추가 후보 (섹션·요소)         │           │
+ │        │    │ ※ 기존 번호 유지   │ ※ 기존 번호 유지              │           │
+ │        ▼    │                    │                               │           │
+ │  ⑨ user-flow ─┘                  │                               │           │
+ │     ◆ 흐름 목록 확정  ◆ 전체 확인│                               │           │
+ │     user-flow.md (F1… 흐름도 · 화면 상태 목록)                   │           │
+ │        │                         │                               │           │
+ │        ▼                         │                               │           │
+ │  ⑩ wireframe ────────────────────┘                               │           │
+ │     ◆ 공통 섹션·첫 묶음 확인  ◆ 전체 확인                        │           │
+ │     wireframe.html (gen.py 생성) + wireframe.md                  │           │
+ │        │                                                         │           │
+ │        ▼                                                         │           │
+ │  ┌─ 정합성 루프 (최대 3회차) ──────────────────────┐             │           │
+ │  │                                                 │             │           │
+ │  │  consistency-check ──▶ ◆ 문제마다 처리 결정      │             │           │
+ │  │    findings.md          (고친다/의도/보류)       │             │           │
+ │  │        ▲                    │                   │             │           │
+ │  │        │ 다음 회차          ▼ 고칠 것 있음       │             │           │
+ │  │        └──────────── consistency-fix            │             │           │
+ │  │                        fix-log.md               │             │           │
+ │  │                        (seed-v2→ui-spec→sitemap │             │           │
+ │  │                         →user-flow→wireframe 순)│             │           │
+ │  └──────────────┬──────────────────────────────────┘             │           │
+ │                 │ 고칠 것 없음 / 3회차 끝                        │           │
+ └─────────────────┼────────────────────────────────────────────────┼───────────┘
+                   │                                                │
+                   │                  ⑦만 끝나면 따로 돌 수 있음 ───┘
+                   │                                    ▼
+ ┌─────────────────┼──────────── 디자인 인계 ─────────────────────────────────┐
+ │                 │                       ⑪ design-references                 │
+ │                 │                          ◆ 레퍼런스 5곳 선별               │
+ │                 │                          selection.md + 캡처              │
+ │                 ▼                                  │                        │
+ │  ⑫ design-request-guide ◀──────────────────────────┘                        │
+ │     request-guide.md (클로드 디자인 6단계 복붙 가이드)                      │
+ │     첨부: seed-v2 · ui-spec · sitemap · user-flow · wireframe.html · 레퍼런스│
+ └────────────────────┬────────────────────────────────────────────────────────┘
+                      ▼
+ ┌──────────────────────── 클로드 디자인 (웹, 사람이 진행) ────────────────────┐
+ │  ① 이해 확인 → ② 톤 → ③ wireframe.html 다듬기 → ④ 색 → ⑤ Tailwind 테마·  │
+ │  공통 컴포넌트 → ⑥ 페이지별 시안                                           │
+ └────────────────────┬────────────────────────────────────────────────────────┘
+                      ▼
+               FE 트랙 (dk-fe-bundle)
+```
+
+- ⑧ ← ⑨·⑩: 유저 흐름이나 와이어프레임에서 사이트맵에 없는 화면·섹션이 나오면 추가 후보로 올린다. 작은 변경은 sitemap.md에 바로 더하고, 1층·부모·섹션 순서가 바뀌는 변경은 sitemap을 다시 실행한다. 다시 실행해도 기존 페이지·섹션 번호는 바뀌지 않는다.
+- ⑪은 ⑦의 전역 분위기만 있으면 되므로 ⑧~⑩과 따로 돌려도 된다.
+
 
 ## 설치
 
@@ -15,14 +92,18 @@
 필요한 도구:
 - WebSearch, WebFetch — 경쟁 서비스 조사 (`discovery-init`, `discovery-research`)
 - Playwright MCP — 화면 캡처 (`discovery-service-recording`, `design-references`)
+- python3 — 와이어프레임 HTML 생성 (`discovery-wireframe`)
 - git — 단계마다 산출물을 커밋한다. 작업하는 프로젝트가 git 저장소여야 한다.
 
 ## 폴더 구성
 
 | 폴더 | 내용 |
 |---|---|
-| `skills/` | 스킬 9개의 진입점 (`SKILL.md`) |
-| `project_discovery/` | 기획 스킬들이 읽는 문서 — 단계별 워크플로, 문체 규칙, 도구 사용법, git 규칙, 조사 반복 규칙 |
+| `skills/` | 스킬 14개의 진입점 (`SKILL.md`) |
+| `project_discovery/` | 기획 스킬들이 읽는 문서 — 단계별 워크플로, 사이트맵·유저 흐름·와이어프레임 가이드, 문체 규칙, 도구 사용법, git 규칙, 조사 반복 규칙 |
+| `project_discovery/tools/wireframe-gen/` | 와이어프레임 HTML 생성기와 본보기 (웹 `example-web/`, 앱 `example/`) |
+| `study/` | 사이트맵·유저 흐름·와이어프레임 스킬이 형식 참고로 보는 이미지 |
+| `docs/` | 사이트맵·유저 흐름·와이어프레임 단계 추가 계획과 스킬 검사 기록 |
 | `cc_design_handoff/` | 디자인 인계 스킬들이 읽는 문서 — 워크플로, 캡처 규칙, 문체 규칙, git 규칙 |
 | `examples/` | 단계마다 실제 실행에서 무엇이 들어가고 무엇이 나왔는지 발췌한 문서 |
 
@@ -36,73 +117,21 @@
 | 4 | `discovery-brainstorm` | 사업 기회와 가능한 영역 찾기 | 없음 | [보기](examples/discovery-brainstorm/input-output.md) |
 | 5 | `discovery-hypothesize` | 세 종류 가설 세우기 (`Pass: 2`로 실행) | 없음 | [보기](examples/discovery-hypothesize/input-output.md) |
 | 6 | `discovery-value-proposal` | 가설을 보고 채택할 것 정하기 (seed-v2.md) | 결정 대화 | [보기](examples/discovery-value-proposal/input-output.md) |
-| 7 | `discovery-ui-spec` | 대화 5번으로 글로 쓰는 UI 기획 (ui-spec.md) | 대화 5번 | [보기](examples/discovery-ui-spec/input-output.md) |
-| 8 | `design-references` | 톤 레퍼런스 캡처하고 보낼 곳 고르기 | 후보 확정 + 선별 | [보기](examples/design-references/input-output.md) |
-| 9 | `design-request-guide` | 클로드 디자인 6단계 진행 가이드 만들기 | 없음 | [보기](examples/design-request-guide/input-output.md) |
+| 7 | `discovery-ui-spec` | 용어·기능 목록·전역 분위기 확정 (ui-spec.md) | 대화 2번 | [보기](examples/discovery-ui-spec/input-output.md) (이전 버전) |
+| 8 | `discovery-sitemap` | 페이지 트리·섹션 목록·이동 표 (sitemap.md) | 1층 확정 + 전체 확인 | 본보기: [example-web](project_discovery/tools/wireframe-gen/example-web/sitemap/sitemap.md) |
+| 9 | `discovery-user-flow` | 과업별 흐름도와 화면 상태 목록 (user-flow.md) | 흐름 목록 확정 + 전체 확인 | 본보기: [example-web](project_discovery/tools/wireframe-gen/example-web/user-flow/user-flow.md) |
+| 10 | `discovery-wireframe` | 색 없는 와이어프레임·와이어플로 (wireframe.html) | 첫 묶음 확인 + 전체 확인 | 본보기: [example-web](project_discovery/tools/wireframe-gen/example-web/wireframe/wireframe.md) |
+| — | `discovery-consistency-check` | 기획 문서 전체에서 모순·누락·미결 찾기 (findings.md) | 문제마다 처리 결정 | — |
+| — | `discovery-consistency-fix` | "고친다"로 정한 문제만 앞 문서에 반영 (fix-log.md) | 없음 | — |
+| 11 | `design-references` | 톤 레퍼런스 캡처하고 보낼 곳 고르기 | 후보 확정 + 선별 | [보기](examples/design-references/input-output.md) |
+| 12 | `design-request-guide` | 클로드 디자인 6단계 진행 가이드 만들기 | 없음 | [보기](examples/design-request-guide/input-output.md) (이전 버전) |
 
-실행 예시는 모두 "크루 매거진 커뮤니티 앱" 아이디어로 한 번 끝까지 돌린 결과에서 발췌했다.
+1~7, 11, 12의 실행 예시는 "크루 매거진 커뮤니티 앱" 아이디어로 한 번 끝까지 돌린 결과에서 발췌했다. "이전 버전"은 사이트맵·유저 흐름·와이어프레임 단계가 생기기 전에 실행한 기록이다.
+8~10은 와이어프레임 생성기 폴더의 웹 본보기를 참고한다. 정합성 검사·수정은 아직 초안이다.
 
 모든 산출물은 **작업 중인 프로젝트**에서 실행 한 번마다 `discovery/{날짜-시각-서비스이름}/` 아래에 단계별 폴더로 쌓인다.
 각 단계는 끝날 때 git 커밋 하나를 남긴다. 기획 단계는 `discovery(...)`, 디자인 단계는 `design(...)`로 시작한다.
 각 단계의 `handoff.json`에는 다음에 실행할 단계(`next_step`)가 적혀 있다.
-
----
-
-## 흐름도
-
-```mermaid
-flowchart TD
-    classDef talk fill:#fde7c8,stroke:#d08a2e,color:#222
-    classDef auto fill:#dbe9f7,stroke:#4a7fb5,color:#222
-    classDef ext fill:#e6e6e6,stroke:#888,color:#222,stroke-dasharray: 4 3
-    classDef file fill:#fff,stroke:#bbb,color:#555
-
-    subgraph PD["기획"]
-        S1["1. discovery-init<br/>아이디어·고객·가치 입력<br/>+ 간단한 시장 탐색 후 방향 질문"]:::talk
-        S2["2. discovery-research<br/>경쟁 서비스 수집·분석<br/>+ 끝에 유저 확인 1번"]:::talk
-        S3["3. discovery-service-recording<br/>경쟁 서비스 화면 캡처"]:::auto
-        S4["4. discovery-brainstorm<br/>사업 기회·가능한 영역 찾기"]:::auto
-        S5["5. discovery-hypothesize (Pass: 2)<br/>수요 → 유저 심리 → 기능 카드<br/>세 종류 가설"]:::auto
-        S6["6. discovery-value-proposal<br/>가설을 보고 채택할 것 결정"]:::talk
-        S7["7. discovery-ui-spec<br/>대화 5번으로 글로 쓰는 UI 기획"]:::talk
-        NR["needs-research.md<br/>추가 조사 항목<br/>(처리하는 단계 없음)"]:::file
-    end
-
-    subgraph DH["디자인 인계"]
-        S8["8. design-references<br/>후보 확정 → 캡처 약 15곳 → 약 5곳 선별"]:::talk
-        S9["9. design-request-guide<br/>클로드 디자인 6단계 프롬프트 조립"]:::auto
-    end
-
-    subgraph CD["클로드 디자인 — 외부에서 직접 진행"]
-        D1["① 기획 문서 보내고 이해 확인"]:::ext
-        D2["② 레퍼런스로 분위기 맞추기"]:::ext
-        D3["③ 색 없는 와이어프레임"]:::ext
-        D4["④ 색·스타일 2~3안 중 확정"]:::ext
-        D5["⑤ Tailwind 테마 + 공통 컴포넌트"]:::ext
-        D6["⑥ 전 페이지 최종 시안"]:::ext
-    end
-
-    FE["FE 구현 (이 플러그인 밖)"]:::ext
-
-    S1 -- "seed.md" --> S2
-    S2 -- "references.md<br/>analysis/" --> S3
-    S3 -- "screenshots/<br/>shots.md" --> S4
-    S4 -- "brainstorm.md" --> S5
-    S5 -- "hypotheses.md" --> S6
-    S6 -- "seed-v2.md" --> S7
-    S7 -- "ui-spec.md<br/>(전역 분위기)" --> S8
-    S8 -- "references/<br/>selection.md" --> S9
-    S6 -. "seed-v2.md" .-> S9
-    S7 -. "ui-spec.md" .-> S9
-    S9 -- "request-guide.md" --> D1
-    D1 --> D2 --> D3 --> D4 --> D5 --> D6 --> FE
-
-    S4 -.-> NR
-    S5 -.-> NR
-    NR -. "확인 안 된 가정으로<br/>보여 주기만 함" .-> S6
-```
-
-색 구분: 주황은 유저와 대화하는 단계, 파랑은 자동으로 도는 단계, 회색 점선은 스킬 밖에서 진행하는 단계다.
 
 ---
 
@@ -147,27 +176,52 @@ flowchart TD
 - 유저가 다 봤다고 하면 질문으로 결정을 받는다. 기본 2라운드, 라운드당 최대 4문항이다.
 - 산출물: `seed-v2.md`. 처음 seed를 자세하게 만든 판으로, 고객 세그먼트, 핵심 가치, 기본으로 있어야 하는 기능, 채택하지 않은 것과 그 이유, 남은 확인 과제가 들어간다.
 
-**7. discovery-ui-spec — 글로 쓰는 UI 기획** (대화 5번)
-- 핵심 기능 나열 → 보조 기능 나열 → 페이지 나열 → 페이지별 기능 배치 → 빠진 곳 메우기와 페이지별 상세
-- 산출물: `ui-spec.md`. 전역 분위기, 기능 목록, 페이지 구성, 페이지별 상세, 결정 기록이 들어간다.
+**7. discovery-ui-spec — 용어·기능·분위기 확정** (대화 2번)
+- 대화 1: 서비스 용어를 먼저 정하고, 핵심 기능을 유저 행동 수준으로 나열한다 (번호 1~N).
+- 대화 2: 핵심 기능을 받쳐 주는 보조 기능을 나열하고 (번호 s1~sN), 전역 분위기를 한 문단으로 정한다.
+- 페이지는 여기서 정하지 않는다. 산출물: `ui-spec.md`
 
-### B. 디자인 인계
+### B. 화면 구조
 
-**8. design-references — 톤 레퍼런스 모으기** (대화 → 자동 → 대화)
+**8. discovery-sitemap — 사이트맵** (확인 2번)
+- 기능을 페이지로 묶고, 1층 메뉴를 유저와 확정한 뒤, 나머지 페이지를 트리에 매단다.
+- 페이지마다 위에서 아래 순서로 섹션 목록(P4-3)을 쓰고, 페이지 사이 이동을 표로 적는다.
+- 뒤 단계가 추가 후보를 넘기면 다시 실행한다. 이때 기존 번호는 바꾸지 않는다.
+- 산출물: `sitemap.md`
+
+**9. discovery-user-flow — 유저 흐름** (확인 2번)
+- 고객군별 핵심 과업과 흔한 흐름(로그인, 온보딩, 검색 등)을 흐름도(F1…)로 그린다. 실패 경로도 그린다.
+- 흐름에서 나온 화면 상태(비로그인, 빈 목록, 오류 등)를 모아 와이어프레임에 넘긴다.
+- 산출물: `user-flow.md`
+
+**10. discovery-wireframe — 와이어프레임** (확인 2번)
+- 박스 하나가 사이트맵 섹션 하나다. 공통 섹션, 페이지별 기본 모양, 상태 화면, 와이어플로를 그린다.
+- 에이전트는 그림 데이터만 쓰고 HTML은 `tools/wireframe-gen/gen.py`가 만든다. 기본은 웹 폭이다.
+- 산출물: `wireframe.html`, `wireframe.md`
+
+**정합성 검사·수정 — consistency-check ⇄ consistency-fix** (최대 3회차)
+- check가 seed-v2부터 wireframe까지 결정 기록을 기준으로 대조해 문제를 찾고, 유저가 문제마다 고친다/의도한 것/보류를 정한다.
+- fix가 "고친다"만 앞 문서부터 순서대로 고친다. 기존 번호는 바꾸지 않는다.
+- 산출물: `consistency/round-{N}/findings.md`, `fix-log.md`
+
+### C. 디자인 인계
+
+**11. design-references — 톤 레퍼런스 모으기** (대화 → 자동 → 대화)
 - ui-spec의 "전역 분위기"를 기준으로 후보 12~18곳을 제안하고, 유저가 더하거나 빼서 확정한다. 경쟁사가 아니라 닮고 싶은 분위기가 기준이다.
 - 사이트마다 2~3장을 캡처한다. 막힌 곳은 기록하고 넘어간다.
 - 캡처를 보고 디자인 도구에 보낼 약 5곳을 함께 고른다. 다 보내면 디자인이 평균을 내 버려서 톤이 흐려지기 때문이다.
 - 산출물: `design_handoff/references/`, `selection.md`(고른 곳과 각각 봐 달라고 할 점)
 
-**9. design-request-guide — 클로드 디자인 진행 가이드 만들기** (자동)
-- seed-v2, ui-spec, 레퍼런스를 읽고 6단계 프롬프트를 바로 붙여 넣을 수 있는 완성문으로 조립한다.
+**12. design-request-guide — 클로드 디자인 진행 가이드 만들기** (자동)
+- seed-v2, ui-spec, sitemap, user-flow, wireframe, 레퍼런스를 읽고 6단계 프롬프트를 바로 붙여 넣을 수 있는 완성문으로 조립한다.
+- 아직 정하지 않은 값(글자 수, 사진 장수 등)은 "정해야 할 값"으로 모은다.
 - 산출물: `request-guide.md`
 
-### C. 클로드 디자인 (외부에서 직접 진행)
+### D. 클로드 디자인 (외부에서 직접 진행)
 
-1. 기획 문서 두 개를 보내고, 제작하지 말고 이해한 내용만 요약해 달라고 해서 맞는지 확인한다
+1. 기획 문서 네 개를 보내고, 제작하지 말고 이해한 내용만 요약해 달라고 해서 맞는지 확인한다
 2. 레퍼런스 약 5장을 보내 분위기를 맞춘다
-3. 색 없는 와이어프레임으로 페이지 배치를 확정한다
+3. 우리 wireframe.html을 보내 섹션 번호를 유지한 채 다듬게 한다
 4. 색과 스타일 2~3안 중 하나를 골라 팔레트와 서체를 확정한다
 5. Tailwind 테마 파일과 공통 컴포넌트 코드를 받는다
 6. 전 페이지 최종 시안을 받아 FE 트랙으로 넘긴다
@@ -182,12 +236,17 @@ flowchart TD
 | 2 discovery-research | 끝에 확인 1번 |
 | 3~5 | 없음 (자동으로 이어서 실행 가능) |
 | 6 discovery-value-proposal | 결정 대화 |
-| 7 discovery-ui-spec | 대화 5번 |
-| 8 design-references | 후보 확정 + 최종 선별 |
-| 9 design-request-guide | 없음 |
+| 7 discovery-ui-spec | 대화 2번 |
+| 8 discovery-sitemap | 1층 확정 + 전체 확인 |
+| 9 discovery-user-flow | 흐름 목록 확정 + 전체 확인 + 추가 후보 결정 |
+| 10 discovery-wireframe | 공통 섹션·첫 묶음 확인 + 전체 확인 + 추가 후보 결정 |
+| consistency-check / fix | 회차마다 문제별 처리 결정 / 없음 |
+| 11 design-references | 후보 확정 + 최종 선별 |
+| 12 design-request-guide | 없음 |
 | 클로드 디자인 ①~⑥ | 직접 진행 |
 
 ## 흐름에서 끊겨 있는 곳
 
 1. **`needs-research.md`를 받아 처리하는 단계가 없다.** 4단계와 5단계가 추가 조사 항목을 기록하지만, 그걸 조사하는 단계는 지금 파이프라인에 없다. 지금은 6단계에서 유저에게 "확인 안 된 가정"으로 보여 주는 데서 끝난다.
-2. **클로드 디자인 결과물을 FE 코드로 옮기는 단계는 이 플러그인에 없다.**
+2. **클로드 디자인 결과물을 FE 코드로 옮기는 단계는 이 플러그인에 없다.** 별도 플러그인 dk-fe-bundle이 맡는다.
+3. **정합성 검사·수정 스킬은 초안이다.** 테스트 실행에서 나온 스킬 피드백이 아직 반영되지 않았다.
