@@ -1,5 +1,9 @@
 # discovery-ui-spec — 실행 예시
 
+> 이 예시는 대화를 다섯 번 하던 이전 버전으로 실행한 기록이다. 지금 버전은 대화 1(용어·핵심 기능)과
+> 대화 2(보조 기능·전역 분위기)만 하고, 이 예시의 대화 3~5(페이지 나열, 배치, 페이지별 상세)는
+> discovery-sitemap · discovery-user-flow · discovery-wireframe이 맡는다.
+
 실행 대상: 크루 매거진 커뮤니티 앱 (원본: `try_project_discovery_2/planner/260918-1754-crew-magazine-community-app/ui-spec/`, 2026-09-19 — 대화 3까지 커밋 `1903bbc`, 대화 5 초안 `8bf2d6f`, 완료 `37b8942`)
 
 ## 호출
