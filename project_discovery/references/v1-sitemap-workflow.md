@@ -12,6 +12,12 @@
 산출물은 다음 단계인 유저 흐름과 와이어프레임의 직접 입력이 된다 — 두 단계 모두
 이 문서의 페이지 번호로 페이지를 가리킨다.
 
+이 스킬은 두 가지로 실행된다:
+- **처음 만들기** — sitemap.md가 없을 때. 아래 "진행 순서" 0~8단계를 그대로 간다.
+- **다시 만들기** — sitemap.md가 이미 있고, 유저 흐름이나 와이어프레임 단계가
+  "discovery-sitemap 재실행"으로 정한 추가 후보를 넘겼을 때. 아래 "다시 만들기" 절을 따른다.
+  뒤 단계가 이미 이 문서의 번호를 쓰고 있으므로 **기존 번호를 바꾸지 않는 것**이 가장 중요한 규칙이다.
+
 ## 참조 레퍼런스
 
 ```
@@ -41,6 +47,11 @@ You MUST also look at the reference images before starting (Read 도구로 이�
 선택 (있으면 참조 강도가 올라감):
   research/screenshots/*/shots.md, research/analysis/*.md — 경쟁사의 메뉴 구성과 페이지 구성
   hypothesize/hypotheses.md — Pass 2 니즈의 화면 위치 기록 (경쟁사가 이 기능을 어느 화면에 뒀는가)
+다시 만들기일 때 추가로 읽는다:
+  sitemap/sitemap.md — 기존 사이트맵 (번호를 지킬 기준)
+  user-flow/user-flow.md "사이트맵 대조 결과", wireframe/wireframe.md "추가 후보"
+    — 진행 상태가 "사이트맵 재실행 대기"인 문서의 표에서, 반영 방법이 "discovery-sitemap 재실행"이고
+      유저 결정이 반영인 줄. Candidates: 인자로 문서를 지정할 수도 있다
 ```
 
 ## 진행 순서
@@ -48,6 +59,11 @@ You MUST also look at the reference images before starting (Read 도구로 이�
 ### 0. 재료 읽기와 전제 확인
 
 ```
+- sitemap/sitemap.md가 이미 있으면 처음 만들기를 하지 않는다:
+    user-flow.md나 wireframe.md의 진행 상태가 "사이트맵 재실행 대기"이거나 Candidates: 인자가 있으면 → "다시 만들기" 절로 간다
+    그렇지 않으면 → 유저에게 "고칠 부분이 있는지, 처음부터 다시 할지" 묻는다. 처음부터 다시 하면
+      유저 흐름·와이어프레임이 쓰던 번호가 깨질 수 있다고 함께 알린다
+    대화형이 아니면 묻지 않고 기존 파일을 건드리지 않은 채 멈춘다
 - 입력 문서를 모두 읽는다.
 - 서비스 용어를 확인한다. ui-spec에 용어 표가 있으면 그대로 쓰고, 없으면 기능 목록에
   나오는 핵심 명사(예: 모임, 이벤트)를 추려 유저에게 확인한다 — 페이지 이름에 그대로 쓰이기 때문이다.
@@ -133,6 +149,40 @@ You MUST also look at the reference images before starting (Read 도구로 이�
 유저가 확정하면 산출물을 쓰고 커밋한다.
 ```
 
+## 다시 만들기 (추가 후보 반영)
+
+```
+R0. 후보 모으기
+  사이트맵 재실행 대기 상태인 user-flow.md "사이트맵 대조 결과"와 wireframe.md "추가 후보"에서
+  반영 방법이 "discovery-sitemap 재실행"이고 유저 결정이 반영인 줄을 모은다.
+  후보마다 출처(user-flow F3 / wireframe P4)와 바꿀 곳(1층, 부모, 섹션 순서·나누기·합치기, 새 페이지)을 적는다.
+  후보가 0건이면 다시 만들 것이 없다고 알리고 멈춘다.
+
+R1. 영향받는 단계만 다시 한다
+  1층이 바뀌는 후보 → 3단계(유저 확인 1)부터. 바뀐 1층 아래 페이지만 4~6단계를 다시 한다
+  부모가 바뀌는 후보 → 4단계부터 그 페이지만
+  섹션을 끼우거나 순서를 바꾸거나 나누거나 합치는 후보 → 5단계에서 그 페이지만
+  모든 경우에 6단계 이동 표에서 바뀐 페이지의 들어오는 곳·나가는 곳을 다시 맞춘다
+  바뀌지 않은 페이지는 손대지 않는다.
+
+R2. 번호 지키기 (sitemap-guide.md "번호 규칙"의 다시 만들 때 규칙)
+  - 남는 페이지·섹션의 번호는 그대로. 새 페이지는 가장 큰 번호 다음, 끼운 섹션은 소문자(P4-3a)
+  - 순서를 바꾼 섹션은 번호가 섹션을 따라 움직인다
+  - 합치거나 지운 번호는 취소선과 옮겨 간 곳을 남긴다
+  - 번호를 다시 매겨야만 풀리는 후보가 있으면 스스로 매기지 않고 R3에서 유저에게 묻는다
+
+R3. 점검과 확인
+  7단계 점검을 그대로 한다. 추가로 "다시 만들기" 완성 조건을 확인한다.
+  8단계 전체 확인에서는 전체 대신 바뀐 곳(바뀐 페이지, 새 번호, 취소선)과 반영한 후보 목록을 먼저 보여준다.
+  확정되면 sitemap.md "재실행 기록"에 한 줄 남기고 커밋한다.
+
+R4. 되돌려 보내기
+  유저에게 순서를 안내한다:
+    후보가 user-flow.md에서 왔으면 → discovery-user-flow `Resume: 6`
+    후보가 wireframe.md에서 왔으면 → discovery-user-flow `Resume: 6` → discovery-wireframe `Resume: 5`
+  user-flow.md와 wireframe.md는 이 스킬이 고치지 않는다 — 각 스킬이 재개하면서 바뀐 번호를 대조한다.
+```
+
 ## 완성 조건
 
 ```
@@ -165,6 +215,12 @@ You MUST also look at the reference images before starting (Read 도구로 이�
   □ 경쟁사 자료를 참고한 곳에 출처(shots.md 파일명)가 있다
   □ 내부 용어·발명 조어 노출 0 (tone-guide 산출물 언어 규칙)
 
+다시 만들기 (다시 만들기로 실행했을 때만):
+  □ 기존 sitemap.md에 있던 번호 중 사라진 번호 0 (지운 것은 취소선으로 남아 있다)
+  □ 기존 번호가 다른 페이지·섹션을 가리키게 된 곳 0
+  □ 반영하기로 한 후보가 모두 반영되었고, 재실행 기록에 후보 수와 출처가 있다
+  □ 바뀌지 않은 페이지의 섹션 목록이 기존과 같다
+
 미달 시: 해당 단계로 돌아가 보완한다. 보완 불가하면
 "최소 기준 미달: {항목} — {사유}" 경고를 sitemap.md 상단에 기록한다 (강제로 채우지 않는다).
 ```
@@ -183,7 +239,7 @@ discovery/{run-id}/
 ```markdown
 # 사이트맵 — {서비스 한 줄}
 
-기준 문서: {입력 경로} · 플랫폼: 웹 | 앱 | 둘 다 · 진행 상태: {1층 확정 | 전체 확정}
+기준 문서: {입력 경로} · 플랫폼: 웹 | 앱 | 둘 다 · 진행 상태: {유저 확인 전 초안 | 1층 확정 | 전체 확정}
 
 ## 서비스 용어
 | 용어 | 뜻 |
@@ -209,6 +265,10 @@ discovery/{run-id}/
 
 ## 결정 기록
 | 단계 | 무엇을 | 유저 답변 원문 |
+
+## 재실행 기록
+| 회차 | 후보 출처 | 반영한 후보 수 | 새 번호 | 취소선으로 남긴 번호 |
+(다시 만들기를 한 적이 없으면 "없음")
 ```
 
 ### handoff.json
@@ -226,9 +286,12 @@ discovery/{run-id}/
   "outside_tree": 3,
   "templates": ["P4 모임 페이지", "P5 이벤트 상세"],
   "unplaced_features": 0,
+  "reruns": 0,
   "next_step": "dk-discovery-bundle:discovery-user-flow"
 }
 ```
+
+다시 만들기 뒤에는 `reruns`를 1 올리고, `next_step`은 R4에서 안내한 첫 단계(`dk-discovery-bundle:discovery-user-flow`, Resume: 6)로 둔다.
 
 ## Commit
 
@@ -237,4 +300,5 @@ git add sitemap/ 산출물만
 git diff --cached --name-only → staged 파일 확인 (git/git-verification.md)
 1층 확정 시 중간 저장: "discovery(sitemap): 1층 확정 — {1층 이름 나열}"
 완료 시: "discovery(sitemap): 페이지 {N}·모달 {M}·트리 밖 {K} — 미배치 기능 0"
+다시 만들기 완료 시: "discovery(sitemap): 재실행 {회차} — {출처} 후보 {N}건 반영, 기존 번호 유지"
 ```
