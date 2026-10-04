@@ -1,5 +1,9 @@
 # design-request-guide — 실행 예시
 
+> 이 예시는 사이트맵·유저 흐름·와이어프레임 단계가 생기기 전 버전으로 실행한 기록이다.
+> 지금 버전은 `Run:` 하나로 같은 run의 기획 문서 다섯 개를 읽고, 3단계에서 wireframe.html을 첨부해
+> "새로 만들기"가 아니라 "다듬기"를 요청한다. 아래의 `Value:`·`Spec:` 인자와 3단계 문구는 이전 버전의 것이다.
+
 실행 대상: 크루 매거진 커뮤니티 앱 (원본: `try_project_discovery_2/planner/260918-1754-crew-magazine-community-app/design_handoff/`, 2026-09-20 — 첫 생성 `efefe40`, 레퍼런스 반영 `23e0742`, 전송 패키지 `954804c`)
 
 ## 호출
